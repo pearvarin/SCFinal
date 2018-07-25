@@ -1,0 +1,24 @@
+<template>
+	<body bgcolor="#cccccc">
+		<table align="center" cellspacing="0" cellpadding="0" border="1" bgcolor="#FFFFFF">
+				<tr>
+					<td align="center" width="80">Demand Mean</td>
+					<td align="center" width="80">Demand Standard Deviation</td>
+					<td align="center" width="80">Holding Cost</td>
+					<td align="center" width="80">Backlog Cost</td>
+					<td align="center" width="80">Unit Procurement Cost</td>
+					<td align="center" width="80">Retail Price</td>		
+				</tr>
+				
+				<tr>
+					<td align="center" width="200">"{{buyer_settings['mean']}}"</td>	
+					<td align="center" width="200">"{{buyer_settings['s_dev']}}"</td>
+					<td align="center" width="200">"{{buyer_settings['holding_cost']}}"</td>
+					<td align="center" width="200">"{{buyer_settings['backlog_cost']}}"</td> 
+					<td align="center" width="200">"{{supplier_settings['wholesale_price']}}"</td>
+					<td align="center" width="200">"{{buyer_settings['retail_price']}}"</td>
+				</tr>	
+
+			</table>
+	</body>
+</template>

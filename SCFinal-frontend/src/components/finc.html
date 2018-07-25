@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<!-- Title of Financials Webpage===================================================== -->
+		<title>Parameters</title> 
+		<!-- ===================================================== -->
+		<link type="text/css" href="resources/css/cupertino/jquery-ui-1.8.custom.css" rel="stylesheet" id="pageStyle"/>
+		<link type="text/css" href="resources/css/jquery-ui-layout.css" rel="stylesheet" />
+		<link type="text/css" href="resources/css/controls/ui.accordion.css" rel="stylesheet" />
+		<link type="text/css" href="resources/css/tableshow/muffin.css" rel="stylesheet" />
+		<link type="text/css" href="resources/css/ccd.css" rel="stylesheet" />
+		<!-- ===================================================== -->
+	</head>
+	<body bgcolor="#cccccc">
+		<table align="center" cellspacing="0" cellpadding="0" border="1" bgcolor="#FFFFFF">
+				<tr>
+					<td align="center" width="80">Demand Mean</td>
+					<td align="center" width="80">Demand Standard Deviation</td>
+					<td align="center" width="80">Holding Cost</td>
+					<td align="center" width="80">Backlog Cost</td>
+					<td align="center" width="80">Unit Procurement Cost</td>
+					<td align="center" width="80">Retail Price</td>		
+				</tr>
+				<?php
+					session_start();
+					include "dbconn.php";
+					$user_id = $_SESSION['user_id'];
+					$game_id = $_SESSION['game_id'];
+					header('Refresh: 3');
+					//Load data
+					$user_sql = "SELECT u.user_id, u.email, ul.user_id, ul.link_id 
+					FROM Users2 u, Users_Link ul 
+					WHERE u.user_id = $user_id 
+					AND ul.user_id = $user_id
+					AND ul.game_id = $game_id";
+					$user_result =  odbc_exec($connection, $user_sql);
+					$usertable =  odbc_fetch_array($user_result);
+					$link_id = $usertable['link_id'];
+					
+					$suppliers_sql = "SELECT ul.link_id, ul.user_id, ul.game_id, u.type, u.user_id
+					FROM Users_Link ul, Users2 u
+					WHERE ul.game_id = $game_id
+					AND u.user_id = ul.user_id
+					AND u.type = 2";
+					$suppliers_result =  odbc_exec($connection, $suppliers_sql);
+					while ($row =  odbc_fetch_array($suppliers_result))
+					{
+						$suppliers[] = $row['link_id'];	
+					}
+					
+					$gamestate_sql = "SELECT * FROM Game_State WHERE game_id = $game_id";
+					$gamestate_result =  odbc_exec($connection, $gamestate_sql);
+					$gamestate =  odbc_fetch_array($gamestate_result);
+					$current_period = $gamestate['current_period'];
+					
+					$gamesettings_sql = "SELECT * FROM Game_Settings WHERE game_id = $game_id";
+					$gamesettings_result =  odbc_exec($connection, $gamesettings_sql);
+					$gamesettings =  odbc_fetch_array($gamesettings_result);
+					$num_buyers = $gamesettings['num_buyers'];
+					$lead_time = $gamesettings['lead_time'];
+
+					$bsql = "SELECT * FROM Buyer_Settings WHERE link_id = $link_id";
+					$bresult =  odbc_exec($connection, $bsql);
+					$buyer_settings =  odbc_fetch_array($bresult);	
+					
+					$ssql = "SELECT * FROM Supplier_Settings WHERE link_id = ".($suppliers[0])."";
+					$sresult =  odbc_exec($connection, $ssql);
+					$supplier_settings =  odbc_fetch_array($sresult);				
+
+					echo "<tr>";
+					echo "<td align=\"center\" width=\"200\">".$buyer_settings['mean']."</td>";	
+					echo "<td align=\"center\" width=\"200\">".$buyer_settings['s_dev']."</td>";
+					echo "<td align=\"center\" width=\"200\">".$buyer_settings['holding_cost']."</td>";
+					echo "<td align=\"center\" width=\"200\">".$buyer_settings['backlog_cost']."</td>"; 
+					echo "<td align=\"center\" width=\"200\">".$supplier_settings['wholesale_price']."</td>";
+					echo "<td align=\"center\" width=\"200\">".$buyer_settings['retail_price']."</td>";
+					echo "</tr>";	
+
+				?>
+			</table>
+	</body>
+</html>
