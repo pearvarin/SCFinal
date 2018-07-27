@@ -33,11 +33,11 @@ class GameSession(TrackableDateModel):
     # owner = models.ForeignKey(User, on_delete=models.PROTECT)  #owner can be supplier?
     # use as game id, and verification code
     uri = models.URLField(default=_generate_unique_uri, primary_key=True)
-    num_suppliers = models.IntegerField()
-    num_buyers = models.IntegerField()
+    num_suppliers = models.IntegerField() # 1-5
+    num_buyers = models.IntegerField()#1-5
     date_created = models.DateTimeField(auto_now_add=True)
-    game_state = models.CharField(max_length=1)  # changes to ended when
-    current_period = models.IntegerField()
+    game_play = models.BooleanField(default=True)  
+    current_period = models.IntegerField() #keep updating
 
     def __str__(self):
         return(self.uri)
@@ -55,10 +55,8 @@ class GameSession(TrackableDateModel):
 class GameSessionMessage(TrackableDateModel):
     """Store submissions for a session. """
     user = models.ForeignKey(User, on_delete=models.PROTECT)
-    game_session = models.ForeignKey(
-        GameSession, related_name='uri', on_delete=models.PROTECT)
-    period = models.ForeignKey(
-        GameSession, related_name="current_period", on_delete=models.PROTECT)
+    game_session = models.ForeignKey(GameSession, related_name='uri', on_delete=models.PROTECT)
+    period = models.ForeignKey(GameSession, related_name="current_period", on_delete=models.PROTECT)
     forecast1 = models.IntegerField()
     forecast2 = models.IntegerField()
     forecast3 = models.IntegerField()
@@ -76,104 +74,159 @@ class GameSessionMessage(TrackableDateModel):
         """deserialize message to JSON."""
         return{'user': deserialize_user(self.user), 'Forecast 1': self.forecast1, 'Forecast 2': self.forecast2, 'Forecast 3': self.forecast3, 'Forecast 4': self.forecast4, 'Order': self.order}
 
+    class Meta:
+        unique_together=('user', 'game_session', 'period')
+
 class GameSessionMember(TrackableDateModel):
     """Store all users in a chat session."""
     user_types = (('S', 'Supplier'), ('B', 'Buyer'), ('GM', 'Game Manager'))
     game_session = models.ForeignKey(
-        GameSession, related_name='uri', on_delete=models.PROTECT
-    )
+        GameSession, related_name='uri', on_delete=models.PROTECT)
     user = models.ForeignKey(User, on_delete=models.PROTECT)
     user_type = models.CharField(max_length=1, choices=user_types)
+    
+    class Meta:
+        unique_together=('user', 'game_session')
 
 class GameBuyerData(models.Model):
     game_session = models.ForeignKey(
-        GameSession, related_name='uid', on_delete=models.PROTECT
-    )
+        GameSession, related_name='uid', on_delete=models.PROTECT)
     user = models.ForeignKey(User, on_delete=models.PROTECT)
-  
-    order_amount = models.IntegerField()
-    shipment = models.IntegerField()
-    sec_shipment = models.IntegerField()
+    period = models.ForeignKey(
+        GameSession, related_name="current_period", on_delete=models.PROTECT)
+
+    dedicated_inventory=models.IntegerField()
+    order_demand = models.IntegerField(default=0)
     on_order = models.IntegerField()
-    
+    received_shipment = models.IntegerField()
+    fg_inventory = models.IntegerField(default=0)
+    backlog = models.IntegerField(default=0)
+
+    mean_p1 = models.IntegerField()
+    mean_p2 = models.IntegerField()
+    mean_p3 = models.IntegerField()
+    mean_p4 = models.IntegerField()
+    mean_current=models.IntegerField()
+    sd_p1 - models.IntegerField()
+    sd_p1 - models.IntegerField()
+    sd_p3 - models.IntegerField()
+    sd_p4 - models.IntegerField()
+    sd_current - models.IntegerField()
+
     fill_rate = models.FloatField() #avg service level
     smoothed_acc = models.FloatField()
-    dedicated_inventory=models.IntegerField()
     avg_profit=models.FloatField()
     accumulated_profit=models.FloatField()
 
+    class Meta:
+        unique_together=('user', 'game_session', 'period')
 
-class GameSupplierData(models.Model):
-    game_session = models.ForeignKey(
-        GameSession, related_name='uid', on_delete=models.PROTECT
-    )
+
+class GameSupplierSettings(models.Model):
+    game_session = models.ForeignKey(GameSession, related_name='uid', on_delete=models.PROTECT)
     user = models.ForeignKey(User, on_delete=models.PROTECT)
     allocaton_rule=models.CharField(max_length=1, choices = (('M', 'Manual'), ('P','Proportional'), ('U', 'Uniform'), ('F', 'Forecast Accuracy')))
     prod_strategy = models.CharField(max_length=1, choices=(('H', 'High'), ('M', 'Medium'), ('L'), ('Low')))
     supplier_avg_fill_rate=models.FloatField()
 
+    class Meta:
+        unique_together=('user', 'game_session')
+
+class GameSupplierData(models.Model):
+    game_session = models.ForeignKey(GameSession, related_name='uid', on_delete=models.PROTECT)
+    user = models.ForeignKey(User, on_delete=models.PROTECT)
+    period = models.ForeignKey(GameSession, related_name="current_period", on_delete=models.PROTECT)
+    fill_rate = models.FloatField()
+    inventory_level=models.IntegerField()
+    profit=models.FloatField()
+    orders_received = models.IntegerField()
+    quantity_shipped = models.IntegerField()
+    production_quantity=models.IntegerField()
+    back_orders = models.IntegerField()
+    revenue=models.FloatField()
+    production_cost=models.FloatField()
+    inventory_cost=models.FloatField()
+    backlog_cost=models.FloatField()
+
+    class Meta:
+        unique_together=('user', 'game_session', 'period')
+
 class GameSettings(models.Model):
     # managed by game manager
     game_session = models.ForeignKey(
-        GameSession, related_name='uid', on_delete=models.PROTECT)
-    exp_smooth_coeff = models.FloatField()
-    percent_remaining = models.FloatField()
-    percent_reassigned = models.FloatField()
-    num_periods = models.IntegerField()
-    dedicated_period = models.IntegerField()
-    buyer_lead_time = models.IntegerField()
-    seed = models.IntegerField()
-    supplier_backlog = models.BooleanField()
-    overall_supply_health = models.BooleanField()
-    reallocate_inventory = models.BooleanField()
+        GameSession, related_name='uid', on_delete=models.PROTECT, primary_key = True)
+    exp_smooth_coeff = models.FloatField(default=0.3)
+    percent_remaining = models.FloatField(default=0.9)
+    percent_reassigned = models.FloatField(default=0.5)
+    num_periods = models.IntegerField(default=50)
+    dedicated_period = models.IntegerField(default=1)
+    buyer_lead_time = models.IntegerField(default=0)
+    seed = models.IntegerField(default=2)
+    supplier_backlog = models.BooleanField(default=True)
+    overall_supply_health = models.BooleanField(default=True)
+    reallocate_inventory = models.BooleanField(default=True)
     demand_process = models.CharField(max_length=1, choices=(('S','Stationary'),('L','LowHigh'),('D','Diffusion')))
 
 
 class VisibilityGameSettings(models.Model)
     game_session = models.ForeignKey(
-        GameSession, related_name='uid', on_delete=models.PROTECT)
-    supplier_buyer_inventory = models.BooleanField()
-    supplier_buyer_demand = models.BooleanField()
-    ded_inv_buyer1 = models.BooleanField()
-    ded_inv_buyer2 = models.BooleanField()
-    ded_inv_buyer3 = models.BooleanField()
-    ded_inv_buyer4 = models.BooleanField()
-    ded_inv_buyer5 = models.BooleanField()
-
+        GameSession, related_name='uid', on_delete=models.PROTECT, primary_key = True)
+    supplier_buyer_inventory = models.BooleanField(default=True)
+    supplier_buyer_demand = models.BooleanField(default=True)
+    ded_inv_buyer1 = models.BooleanField(default=False)
+    ded_inv_buyer2 = models.BooleanField(default=False)
+    ded_inv_buyer3 = models.BooleanField(default=False)
+    ded_inv_buyer4 = models.BooleanField(default=False)
+    ded_inv_buyer5 = models.BooleanField(default=False)
 
 class GameParameterSettings(models.Model):
-    game_session = models.ForeignKey(
-        GameSession, related_name='uid', on_delete=models.PROTECT)
-    lead_time = models.IntegerField()
-    s_production_cost = models.FloatField()
-    s_holding_cost = models.FloatField()
-    s_wholesale_price = models.FloatField()
-    s_min_build = models.FloatField()
-    s_max_capacity = models.FloatField()
+    game_session = models.ForeignKey(GameSession, related_name='uid', on_delete=models.PROTECT, primary_key = True)
+    lead_time = models.IntegerField(default=4)
+    s_production_cost = models.FloatField(default=0.5)
+    s_holding_cost = models.FloatField(default=0.1)
+    s_wholesale_price = models.FloatField(default=1)
+    s_min_build = models.FloatField(default=0)
+    s_max_capacity = models.FloatField(default=1000)
 
-    b_holding_cost_small = models.FloatField()
-    b_holding_cost_medium = models.FloatField()
-    b_holding_cost_big = models.FloatField()
-    b_backlog_cost_small = models.FloatField()
-    b_backlog_cost_medium = models.FloatField()
-    b_backlog_cost_big = models.FloatField()
-    b_retail_pric_small = models.FloatField()
-    b_retail_price_medium = models.FloatField()
-    b_retail_price_big = models.FloatField()
-    b_mean_demand_small = models.FloatField()
-    b_mean_demand_medium = models.FloatField()
-    b_mean_demand_big = models.FloatField()
-    b_sd_demand_small = models.FloatField()
-    b_sd_demand_medium = models.FloatField()
-    b_sd_demand_big = models.FloatField()
+    b_holding_cost_small = models.FloatField(default=0.15)
+    b_holding_cost_medium = models.FloatField(default=0.15)
+    b_holding_cost_big = models.FloatField(default=0.15)
+    b_backlog_cost_small = models.FloatField(default=0.45)
+    b_backlog_cost_medium = models.FloatField(default=0.45)
+    b_backlog_cost_big = models.FloatField(default=0.45)
+    b_retail_pric_small = models.FloatField(default=2)
+    b_retail_price_medium = models.FloatField(default=2)
+    b_retail_price_big = models.FloatField(default=2)
+    b_mean_demand_small = models.FloatField(default=61)
+    b_mean_demand_medium = models.FloatField(default=111)
+    b_mean_demand_big = models.FloatField(default=200)
+    b_sd_demand_small = models.FloatField(default=6.1)
+    b_sd_demand_medium = models.FloatField(default=11.1)
+    b_sd_demand_big = models.FloatField(default=40)
 
     buyer_size = (('S', 'small'), ('M', 'medium'), ('B', 'big'))
 
-    buyer1_size = models.CharField(max_length=1, choices=buyer_size)
-    buyer2_size = models.CharField(max_length=1, choices=buyer_size)
-    buyer3_size = models.CharField(max_length=1, choices=buyer_size)
-    buyer4_size = models.CharField(max_length=1, choices=buyer_size)
-    buyer5_size = models.CharField(max_length=1, choices=buyer_size)
+    buyer1_size = models.CharField(max_length=1, choices=buyer_size, default=('B', 'big'))
+    buyer2_size = models.CharField(max_length=1, choices=buyer_size, default=('B', 'big'))
+    buyer3_size = models.CharField(max_length=1, choices=buyer_size, default=('B', 'big'))
+    buyer4_size = models.CharField(max_length=1, choices=buyer_size, default=('B', 'big'))
+    buyer5_size = models.CharField(max_length=1, choices=buyer_size, default=('B', 'big'))
 
-    competing_supplier = models.BooleanField()
-    competing_supplier_charge=models.IntField()
+    competing_supplier = models.BooleanField(default=False)
+    competing_supplier_charge=models.IntegerField(default=3)
+
+class CommentLog(models.Model):
+    game_session = models.ForeignKey(GameSession, related_name='uid', on_delete=models.PROTECT)
+    user = models.ForeignKey(User, on_delete=models.PROTECT)
+    period = models.ForeignKey(GameSession, related_name="current_period", on_delete=models.PROTECT)
+    comments=models.TextField(null=True)
+
+    class Meta:
+        unique_together=('user', 'game_session', 'period')
+
+#     def contact_default():
+#     return {"email": "to1@example.com"}
+
+# contact_info = JSONField("ContactInfo", default=contact_default)
+
+# To create a recursive relationship – an object that has a many-to-one relationship with itself – use models.ForeignKey('self', on_delete=models.CASCADE).
