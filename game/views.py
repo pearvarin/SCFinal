@@ -19,13 +19,13 @@ class CheckLogIn(APIView):
 
     def check(self, request, *args, **kwargs):
         #check if email already matches existing account
-        user = request.user
+        r_user = request.user
 
-        sql =  "SELECT u.email \
-                FROM Users2 u \
-                WHERE u.username =".username." "
-        if(sql !=0):
-            error
+        if User.objects.filter(email=r_user).exists():
+            return(False) #matches, throws error
+        else:
+            return(True)
+        
 
 
 class GameSessionView(APIView):
