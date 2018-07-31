@@ -102,19 +102,6 @@ export default {
   },
 
   methods: {
-    // startChatSession () {
-    //   this.sessionStarted = true
-    //   this.$router.push('/chats/chat_url/')
-    //    $.post('http://localhost:8000/api/chats/', (data) => {
-    //     alert("A new session has been created you'll be redirected automatically")
-    //     this.sessionStarted = true
-    //     this.$router.push(`/chats/${data.uri}/`)
-    //   })
-    //   .fail((response) => {
-    //     alert(response.responseText)
-    //   })
-    // },
-
     startGameSession () {
       this.sessionStarted = true
       this.$router.push('/game/game_url/')
@@ -129,18 +116,6 @@ export default {
       })
     },
 
-    // postMessage (event) {
-    //   const data = {message: this.message}
-
-    //   $.post(`http://localhost:8000/api/chats/${this.$route.params.uri}/messages/`, data, (data) => {
-    //     this.messages.push(data)
-    //     this.message = '' // clear the message after sending 
-    //   })
-    //   .fail((response) => {
-    //     alert(response.responseText)
-    //   })
-    // },
-
     postForecasts (event) {
       const data = {message: this.message} 
       // change to forecasts
@@ -153,25 +128,6 @@ export default {
         alert(response.responseText)
       })
     },
-
-    // joinChatSession () {
-    //   const uri = this.$route.params.uri
-
-    //   $.ajax({
-    //     url: `http://localhost:8000/api/chats/${uri}/`,
-    //     data: {username: this.username},
-    //     type: 'PATCH',
-    //     success: (data) => {
-    //       const user = data.members.find((member) => member.username === this.username)
-
-    //       if (user) {
-    //         // The user belongs/has joined the session
-    //         this.sessionStarted = true
-    //         this.fetchChatSessionHistory()
-    //       }
-    //     }
-    //   })
-    // },
 
     joinGameSession () {
       const uri = this.$route.params.uri
@@ -191,12 +147,6 @@ export default {
         }
       })
     },
-
-    // fetchChatSessionHistory () {
-    //   $.get(`http://127.0.0.1:8000/api/chats/${this.$route.params.uri}/messages/`, (data) => {
-    //     this.messages = data.messages
-    //   })
-    // },
 
     fetchGameSessionHistory () {
       $.get(`http://127.0.0.1:8000/api/game/${this.$route.params.uri}/messages/`, (data) => {

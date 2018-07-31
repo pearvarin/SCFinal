@@ -1,10 +1,9 @@
 from rest_framework import viewsets, filters
-from .models import Article
-from .serializers import ArticleSerializer
+from .models import *
+from .serializers import *
+
+class UserViewSet(viewsets.ModelViewSet):
+	queryset = User.objects.all()
+	serializer_class = UserSerializer
 
 
-class ArticleViewSet(viewsets.ModelViewSet):
-    queryset = Article.objects.all()
-    serializer_class = ArticleSerializer
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('article_id', 'article_heading', 'article_body')
