@@ -23,6 +23,11 @@ def input():  # feed from inputs
 	supplier_backlog = [0, 0]
 	total_supplier_profit = 0
 
+def calibrate2(b, s, j): #b = no of buyers, s = no of suppliers
+	for i in [1,b]:
+		totals_buyer.append([0]*14)
+	for i in [1,s]:
+		totals_supplier.append([0]*12)
 
 def calibrate(b1, b2, j):  # change for more buyers
 	totals_buyer1 = [0] * 14

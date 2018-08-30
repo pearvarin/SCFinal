@@ -1,4 +1,10 @@
-"""Views for the chat app."""
+"""Views for the SCGame."""
+# # Serialize Python object to JSON string. 
+# task_data = TaskSerializer(task).data 
+ 
+# # Create Python object from JSON string.
+# task_data = TaskSerializer(request.data)
+# task = task_data.create() 
 
 from django.contrib.auth import get_user_model
 # from django.shortcuts import render, get_object_or_404
@@ -85,20 +91,18 @@ class GameSessionView(APIView):  # a lot to fix
 
 class GameSessionMessageView(APIView):
     """Create/Get Game session messages."""
-
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
         # return all submissions in a game
         uri = kwargs['uri']
         game_session = GameSession.objects.get(uri=uri)
-        messages = [game_session_message.to_json()
-                    for game_session_message in game_session.messages.all()]
+
         submissions = [game_session_submissions.to_json()
                        for game_session_submission in game_session.submissions.all()]
         return Response({
             'id': game_session.id, 'uri': game_session.uri,
-            'messages': messages, 'submissions': submissions
+            'submissions': submissions
         })
 
     def post(self, request, *args, **kwargs):
@@ -109,7 +113,10 @@ class GameSessionMessageView(APIView):
         user = request.user
         game_session = GameSession.objects.get(uri=uri)
 
-        game_session_message = GameSessionSubmission.objects.create(
+        submit=GameSessionSerializer(post).data
+
+
+        game_session_submission= GameSessionSubmission.objects.create(
             user=user, game_session=game_session, forecast1=forecast1, forecast2=forecast2, forecast3=forecast3, forecast4=forecase4, order=order)
         #submission = {1:x, 2:x, 3:x, 4:x, order:x}
 
@@ -144,8 +151,7 @@ class GameParameterView(APIView):
 
 
 class FinancialView(APIView):
-    context_object_name = 'context'  # specify context variable to use for g eneric view
-
+    pass
 # class GenericView(ListView):
 #     model = Publisher
 #     context_object_name = 'context'
@@ -204,11 +210,27 @@ class SupplierGame(APIView):
 
 
 class GameManager(APIView):
+    serializer_class = GameManagerSerializer
+
+    def create(self, request, *args, **kwargs):
+        pass
+
+    def get(self,request):
+        pass
+        #return(render(request,html,{}))
+    def post(self, request):
+        pass
+
     pass
 
 
 class Comments(APIView):
-    pass
+    """This class defines the create behavior of our rest api."""
+    queryset = CommentLog.objects.all()
+    serializer_class = CommentLogSerializer
+
+    def perform_create(self, serializer):
+        serializer.save()
 
 
 class ForecastHistoryView(APIView):
@@ -216,11 +238,38 @@ class ForecastHistoryView(APIView):
 
 
 class InventoryView(APIView):
-    pass
+
+    # def get(self, request, version, pk):
+    #     time = generateDemoTime(version, request.GET)
+    #     bar = get_object_or_404(Bar, pk=pk)
+    #     opening = Bar.getOpeningTime(time is not None)
+    #     closing = Bar.getUpperTime(time)
+    #     if Bar.now(time) >= opening:
+    #         results = []
+    #         for count in range(0, ((closing-opening).seconds/60)/MINS_PER_CHUNK):
+    #             startTime = opening + timedelta(minutes=MINS_PER_CHUNK*count)
+    #             endTime = startTime + timedelta(minutes=MINS_PER_CHUNK)
+    #             # Only add if that time is valid
+    #             results.append({
+    #                 "label": "%s - %s" % (startTime.strftime("%I:%M %p"), endTime.strftime("%I:%M %p")),
+    #                 "x": count,
+    #                 "y": bar.getTodaysTimeActivity(startTime, endTime)
+    #             })
+    #         return JsonResponse({"results": results})
+    #     else:
+    #         return JsonResponse({"errors": {"now": "Tonight's data is not yet available."}}, status=400)
+
 
 
 class GameSetting(APIView):
-    pass
+
+    def get(self, request):
+        return(render(request, 'gamesetting.html', {
+            'xxx':request.GET.get(''),
+            }))
+
+    def post(self, request):
+        pass
 
 
 class exitGame(APIView):
@@ -228,35 +277,3 @@ class exitGame(APIView):
     Logout = True
     # some exit game API
     # URL logout=true
-
-
-# serializers
-
-class CreateView(generics.ListCreateAPIView):
-    """This class defines the create behavior of our rest api."""
-    queryset = Bucketlist.objects.all()
-    serializer_class = BucketlistSerializer
-
-    def perform_create(self, serializer):
-        """Save the post data when creating a new bucketlist."""
-        serializer.save()
-
-        # api/urls.py
-
-class DetailsView(generics.RetrieveUpdateDestroyAPIView):
-    """This class handles the http GET, PUT and DELETE requests."""
-
-    queryset = Bucketlist.objects.all()
-    serializer_class = BucketlistSerializer
-
-from rest_framework import generics
-from .models import Songs
-from .serializers import SongsSerializer
-
-
-class ListSongsView(generics.ListAPIView):
-    """
-    Provides a get method handler.
-    """
-    queryset = Songs.objects.all()
-    serializer_class = SongsSerializer
