@@ -15,9 +15,6 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.conf import settings
-from rest_framework.documentation import include_docs_urls
-
 
 # from django.views.generic import TemplateView
 
@@ -26,14 +23,6 @@ urlpatterns = [
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),
     path('api/', include('game.urls')),
-    path(r'^docs/', include_docs_urls(title='Supply Chain Game')),
     # path('article', TemplateView.as_view(template_name='index.html')),
     # path('', TemplateView.as_view(template_name='index.html')),
 ]
-
-if settings.DEBUG:
-    from django.conf.urls.static import static
-    urlpatterns += static(settings.MEDIA_URL,
-                          document_root=settings.MEDIA_ROOT)
-    urlpatterns += static(settings.STATIC_URL,
-                          document_root=settings.STATIC_ROOT)

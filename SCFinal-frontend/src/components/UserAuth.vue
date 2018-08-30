@@ -67,43 +67,13 @@
     },
 
     methods: {
-
       signUp () {
-
+        $.post('http://localhost:8000/auth/users/create/', this.$data, (data) => {
+          alert('Your account has been created. You will be signed in automatically')
           //check email not duplicate
           //if(!is_null($user["email"])){
         //window.alert('You already have an account with us. We have re-sent your password to you.')
           // mail( $result["email"], "Your Supply Chain Game Password", $password_string, "From:SupplyChainGame@gatech.edu")
-
-
-          //Check that the form has been filled out correctly.
-  
-/*  
-  $email=strtolower(trim($_POST['email'])); // User ID from the login page
-
-  $passwd=strtolower(trim($_POST['passwd'])); // Password from the login page
-  
-  // Display the message below when the user missed entering his/her ID in the login page.
-  if(!$email) {
-    echo("
-      <script>
-        window.alert('Input your Email.')
-        history.go(-1)
-      </script>");
-    exit;
-  }
-
-  // Display the message below when the user missed entering his/her password in the login page.
-  // if(!$passwd) {
-    // echo("
-      // <script>
-        // window.alert('Input your Password.')
-        // history.go(-1)
-      // </script>");
-    // exit;
-  // }*/
-          $.post('http://localhost:8000/auth/users/create/', this.$data, (data) => {
-            alert('Your account has been created. You will be signed in automatically')
           this.signIn()
         })
         .fail((response) => {
@@ -125,13 +95,6 @@
         })
         .fail((response) => {
           alert(response.responseText)
-/*  if(($id != "root") && ($email != $dbemail)){
-    echo("<script>
-        window.alert('Invalid Email')
-        history.go(-1)
-      </script>");
-    exit;
-  }*/
         })
       },
     }

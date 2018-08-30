@@ -1,4 +1,5 @@
 from rest_framework import serializers
+<<<<<<< HEAD
 from .models import *
 
 
@@ -115,3 +116,10 @@ class CommentLogSerializer(serializers.ModelSerializer):
 # # .save() will update the existing `comment` instance.
 # serializer = CommentSerializer(comment, data=data)
 
+=======
+from .models import Article
+class ArticleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Article
+        fields = '__all__'
+>>>>>>> parent of fed72be... fuck this
